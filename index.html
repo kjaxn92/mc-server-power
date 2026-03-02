@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サーバーステータス | 稼働状況確認</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap');
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <script>
+        /**
+         * 【設定項目：サーバー状態】
+         * "online" / "maintenance" / "offline"
+         */
+        const SERVER_STATUS = "maintenance"; 
+
+        /**
+         * 【設定項目：メンテナンス詳細】
+         * 状態が "maintenance" の時のみ反映されます。
+         */
+        const MAINTENANCE_DETAILS = {
+            until: "2026年3月10日 18:00", // 完了予定時刻
+            reason: "大型アップデート（Ver 2.0）の適用", // 理由
+            impact: "すべてのゲーム内サーバー及びAPIへの接続" // 影響範囲
+        };
+
+        window.onload = () => {
+            const display = {
+                online: {
+                    color: "text-emerald-500",
+                    bg: "bg-emerald-500",
+                    lightBg: "bg-emerald-50",
+                    border: "border-emerald-200",
+                    text: "正常稼働中",
+                    desc: "すべてのシステムは正常に動作しています。",
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                },
+                maintenance: {
+                    color: "text-amber-500",
+                    bg: "bg-amber-500",
+                    lightBg: "bg-amber-50",
+                    border: "border-amber-200",
+                    text: "メンテナンス中",
+                    desc: "現在、システムのメンテナンスを行っています。",
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                },
+                offline: {
+                    color: "text-rose-500",
+                    bg: "bg-rose-500",
+                    lightBg: "bg-rose-50",
+                    border: "border-rose-200",
+                    text: "オフライン",
+                    desc: "サーバーは現在停止しています。接続することはできません。",
+                    icon: `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                }
+            };
+
+            const config = display[SERVER_STATUS] || display.online;
+
+            // 基本情報の反映
+            document.getElementById('status-icon-container').innerHTML = config.icon;
+            document.getElementById('status-icon-container').className = `p-4 rounded-2xl mb-6 ${config.color} ${config.lightBg}`;
+            document.getElementById('status-text').innerText = config.text;
+            document.getElementById('status-text').className = `text-4xl font-extrabold mb-2 ${config.color}`;
+            document.getElementById('status-description').innerText = config.desc;
+            document.getElementById('status-indicator').className = `w-3 h-3 rounded-full mr-2 status-pulse ${config.bg}`;
+            document.getElementById('main-card').className = `bg-white rounded-[2.5rem] p-10 shadow-xl shadow-slate-200 border-b-8 ${config.border}`;
+            document.getElementById('update-time').innerText = new Date().toLocaleString('ja-JP');
+
+            // メンテナンス詳細エリアの制御
+            const maintenancePanel = document.getElementById('maintenance-panel');
+            if (SERVER_STATUS === "maintenance") {
+                maintenancePanel.classList.remove('hidden');
+                document.getElementById('m-until').innerText = MAINTENANCE_DETAILS.until;
+                document.getElementById('m-reason').innerText = MAINTENANCE_DETAILS.reason;
+                document.getElementById('m-impact').innerText = MAINTENANCE_DETAILS.impact;
+            } else {
+                maintenancePanel.classList.add('hidden');
+            }
+        };
+    </script>
+
+    <!-- Header -->
+    <header class="p-6 md:p-10">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 text-slate-900">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14M5 12l4-4m-4 4l4 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <span class="font-bold text-xl tracking-tight">SERVER NETWORK</span>
+            </div>
+            <div class="flex items-center text-sm font-medium text-slate-500 uppercase tracking-widest">
+                <div id="status-indicator"></div>
+                LIVE STATUS
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center px-6 py-12">
+        <div class="max-w-xl w-full">
+            <div id="main-card">
+                <div class="flex flex-col items-center text-center">
+                    <div id="status-icon-container"></div>
+                    <h1 id="status-text">...</h1>
+                    <p id="status-description" class="text-slate-500 font-medium max-w-sm mb-8"></p>
+                </div>
+
+                <!-- メンテナンス詳細パネル (Hidden by default) -->
+                <div id="maintenance-panel" class="hidden bg-amber-50 rounded-2xl p-6 border border-amber-100 space-y-4">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">完了予定時刻</span>
+                        <span id="m-until" class="text-sm font-bold text-amber-900"></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">メンテナンス内容</span>
+                        <span id="m-reason" class="text-sm font-bold text-amber-900"></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">影響範囲</span>
+                        <span id="m-impact" class="text-sm font-bold text-amber-900"></span>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-2xl">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">最終更新</span>
+                        <span id="update-time" class="text-xs font-semibold text-slate-600">--:--:--</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">リージョン</span>
+                        <span class="text-xs font-semibold text-slate-600">JP-Tokyo-01</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="mt-8 text-center text-slate-400 text-sm">
+                <p>詳細な進捗は <a href="#" class="text-slate-900 font-semibold underline decoration-slate-200">公式Discord</a> にて配信中です。</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-10 text-center border-t border-slate-100 bg-white mt-auto">
+        <p class="text-xs font-bold tracking-[0.3em] text-slate-300 uppercase">© 2026 SERVER GOVERNMENT ADMINISTRATION</p>
+    </footer>
+
+</body>
+</html>
+
